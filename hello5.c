@@ -18,26 +18,25 @@ static LIST_HEAD(hello_list);
 
 static unsigned int print_count = 1;
 module_param(print_count, uint, S_IRUGO);
-MODULE_PARM_DESC(print_count, "Number of times to print 'Hello, world!' (default=1)");
+MODULE_PARM_DESC(print_count, "Description: amount of time 'Hello, world!' will be printed (default=1)");
 
 static int __init hello_init(void)
 {
     if (print_count == 0 || (print_count > 5 && print_count < 10)) {
         pr_warn("Print count is 0 or between 5 and 10. Defaulting to 1.\n");
-    } else if (print_count > 10) {
-        pr_err("Print count is greater than 10. Module cannot be loaded.\n");
-        return -EINVAL;
     }
+    BUG_ON(print_count > 10);
 
     while (print_count > 0) {
-        struct hello_entry *entry = kmalloc(sizeof(*entry), GFP_KERNEL);
+        struct hello_entry *entry;
 
-        if (!entry) {
-            pr_err("Failed to allocate memory for hello_entry\n");
-            return -ENOMEM;
+        if (print_count == 1) {
+            entry = NULL;
+        } else {
+            entry = kmalloc(sizeof(*entry), GFP_KERNEL);
         }
-        entry->time = ktime_get();
 
+        entry->time = ktime_get();
         list_add(&entry->list, &hello_list);
 
         pr_emerg("Hello, world!\n");
