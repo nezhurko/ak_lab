@@ -1,9 +1,11 @@
+// hello1.c
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/printk.h>
 #include <linux/list.h>
 #include <linux/slab.h>
 #include <linux/ktime.h>
+#include "inc/hello1.h"
 
 MODULE_AUTHOR("Tymur Nezhurko <timurmail27@gmail.com>");
 MODULE_DESCRIPTION("Hello, world in Linux Kernel Training");
@@ -36,11 +38,18 @@ static int __init hello_init(void)
             pr_err("Failed to allocate memory for hello_entry\n");
             return -ENOMEM;
         }
+
         entry->time = ktime_get();
 
-        list_add(&entry->list, &hello_list);
+        ktime_t before_print_hello2 = ktime_get();
+       
+        print_hello2(1);
 
-        pr_emerg("Hello, world!\n");
+        ktime_t after_print_hello2 = ktime_get();
+
+        entry->time = ktime_sub(after_print_hello2, before_print_hello2);
+
+        list_add(&entry->list, &hello_list);
 
         print_count--;
     }
@@ -53,8 +62,10 @@ static void __exit hello_exit(void)
     struct hello_entry *entry, *temp;
 
     list_for_each_entry_safe(entry, temp, &hello_list, list) {
-        pr_emerg("Time: %lld ns\n", ktime_to_ns(entry->time));
+        pr_emerg("Time difference: %lld ns\n", ktime_to_ns(entry->time));
+
         list_del(&entry->list);
+
         kfree(entry);
     }
 }
